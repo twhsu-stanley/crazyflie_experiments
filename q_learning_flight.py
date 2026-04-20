@@ -11,6 +11,8 @@ import time
 import queue
 import numpy as np
 from threading import Thread, Event
+from datetime import datetime
+import csv
 
 import cflib.crtp
 
@@ -47,6 +49,9 @@ MAX_NAVIGATION_STEPS = 50  # Max steps before giving up
 
 # Q-table file (optional, will create dummy if not found)
 Q_TABLE_FILE = None  # Set to a file path if you have a pre-trained Q-table
+
+# Logging parameters
+SAVE_TRAJECTORY = True  # Save position trajectory to CSV
 
 
 def create_dummy_q_table(grid_env):
@@ -198,6 +203,27 @@ def wait_until_near_waypoint(qtm_client, target_xyz, threshold, timeout=5.0):
     return get_current_position(qtm_client, timeout=0.2)
 
 
+def save_position_history(position_history, filename="position_history.csv"):
+    """
+    Save position history to CSV file.
+    
+    Args:
+        position_history: List of (timestamp, x, y, z) tuples
+        filename: Output CSV filename
+    """
+    if not position_history:
+        print("[LOG] No position history to save")
+        return
+    
+    with open(filename, 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(['timestamp', 'x', 'y', 'z'])
+        for timestamp, x, y, z in position_history:
+            writer.writerow([timestamp, f"{x:.6f}", f"{y:.6f}", f"{z:.6f}"])
+    
+    print(f"[LOG] Position history saved to {filename} ({len(position_history)} samples)")
+
+
 def navigate_with_q_learning(cf_client, qtm_client, grid_env, controller, current_position):
     """
     Navigate from current position to target using Q-learning.
@@ -209,10 +235,15 @@ def navigate_with_q_learning(cf_client, qtm_client, grid_env, controller, curren
         current_position: Current (x, y, z) position tuple
     
     Returns:
-        True if reached target, False otherwise
+        Tuple of (success: bool, position_history: list)
     """
     print("[FLIGHT] Starting Q-learning navigation")
     print(f"[FLIGHT] Start position: ({current_position[0]:.2f}, {current_position[1]:.2f}, {current_position[2]:.2f})")
+    
+    # Initialize position history logger
+    position_history = []
+    flight_start_time = time.time()
+    position_history.append((flight_start_time, current_position[0], current_position[1], current_position[2]))
     
     # Determine starting grid from current position
     start_grid_x, start_grid_y = grid_env.continuous_to_grid(current_position[0], current_position[1])
@@ -285,15 +316,19 @@ def navigate_with_q_learning(cf_client, qtm_client, grid_env, controller, curren
 
         # Update current position from mocap for the next iteration.
         current_position = reached_position
+        
+        # Log position to history
+        current_time = time.time()
+        position_history.append((current_time, current_position[0], current_position[1], current_position[2]))
 
         # Check if reached target grid
         current_grid_x, current_grid_y = grid_env.continuous_to_grid(current_position[0], current_position[1])
         if current_grid_x == target_grid_x and current_grid_y == target_grid_y:
             print(f"\n[FLIGHT] Reached target grid in {step + 1} steps!")
-            return True
+            return True, position_history
     
     print(f"\n[FLIGHT] Failed to reach target within {MAX_NAVIGATION_STEPS} steps")
-    return False
+    return False, position_history
 
 
 def main():
@@ -400,7 +435,14 @@ def main():
 
         # Start Q-learning navigation from current position
         current_position = get_current_position(qtm_client)
-        navigate_with_q_learning(cf_client, qtm_client, grid_env, controller, current_position)
+        success, position_history = navigate_with_q_learning(cf_client, qtm_client, grid_env, controller, current_position)
+        
+        # Save trajectory
+        if SAVE_TRAJECTORY:
+            timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+            trajectory_file = f"trajectory_{timestamp_str}.csv"
+            save_position_history(position_history, trajectory_file)
+            print(f"[MAIN] To visualize, run: python visualize_flight.py {trajectory_file}")
 
         # Land
         print("[MAIN] Landing...")

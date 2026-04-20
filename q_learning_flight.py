@@ -31,7 +31,7 @@ MARKER_DECK_IDS = [21, 22, 23, 24]
 GRID_X_MIN, GRID_X_MAX = 0.0, 2.0
 GRID_Y_MIN, GRID_Y_MAX = 0.0, 2.0
 GRID_SIZE = 0.5
-Z_CONSTANT = 1.0  # Constant altitude for hovering
+Z_CONSTANT = 0.8  # Constant altitude for hovering
 
 # Flight parameters
 HOVER_Z = 1.0
@@ -43,7 +43,7 @@ RATE_HZ = 20
 # Navigation parameters
 WAYPOINT_REACH_THRESHOLD = 0.15  # Distance threshold to consider waypoint reached (meters)
 TIME_AT_WAYPOINT = 1.0  # Time to hover at each waypoint (seconds)
-MAX_NAVIGATION_STEPS = 5  # Max steps before giving up
+MAX_NAVIGATION_STEPS = 50  # Max steps before giving up
 
 # Q-table file (optional, will create dummy if not found)
 Q_TABLE_FILE = None  # Set to a file path if you have a pre-trained Q-table
@@ -176,10 +176,11 @@ def get_current_position(qtm_client, timeout=2.0):
     """Get the latest mocap position as an (x, y, z) tuple."""
     deadline = time.time() + timeout
     while time.time() < deadline:
-        pose = qtm_client.get_latest_pose()
-        if pose is not None:
-            return pose[:3]
-        time.sleep(0.05)
+        try:
+            pose = qtm_client.pose_queue.get(timeout=0.05)
+            return pose[:3]  # Extract (x, y, z) from (x, y, z, qx, qy, qz, qw)
+        except queue.Empty:
+            time.sleep(0.05)
 
     raise TimeoutError("Timed out waiting for a valid mocap pose.")
 

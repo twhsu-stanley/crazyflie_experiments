@@ -13,6 +13,7 @@ import numpy as np
 from threading import Thread, Event
 from datetime import datetime
 import csv
+import pickle
 
 import cflib.crtp
 
@@ -32,7 +33,7 @@ MARKER_DECK_IDS = [1, 2, 3, 4]
 # 3D grid environment parameters
 GRID_X_MIN, GRID_X_MAX = 0.0, 2.0
 GRID_Y_MIN, GRID_Y_MAX = 0.0, 2.0
-GRID_Z_MIN, GRID_Z_MAX = 0.4, 1.6
+GRID_Z_MIN, GRID_Z_MAX = 0.1, 2.1
 GRID_SIZE = 0.4
 
 # Flight parameters
@@ -45,10 +46,10 @@ RATE_HZ = 20
 # Navigation parameters
 WAYPOINT_REACH_THRESHOLD = 0.18
 TIME_AT_WAYPOINT = 0.8
-MAX_NAVIGATION_STEPS = 60
+MAX_NAVIGATION_STEPS = 10
 
 # Q-table file (optional, will create a fake 3D one if not found)
-Q_TABLE_FILE = None
+Q_TABLE_FILE = None #"Q_table.pkl"
 SAVE_Q_TABLE = True
 SAVE_TRAJECTORY = True
 DATA_DIR = Path("data")
@@ -83,7 +84,20 @@ def load_or_create_q_table(grid_env, q_table_file=None):
     """Load a Q-table from disk or create a fake 3D one."""
     if q_table_file is not None:
         try:
-            q_table = np.load(q_table_file)
+            if str(q_table_file).endswith('.pkl'):
+                with open(q_table_file, 'rb') as f:
+                    q_table = pickle.load(f)
+            else:
+                q_table = np.load(q_table_file)
+            
+            expected_states = grid_env.num_states
+            expected_actions = len(Action3D)
+            
+            # Check if Q-table shape matches expected dimensions
+            if q_table.shape != (expected_states, expected_actions):
+                raise ValueError(f"[FLIGHT3D] WARNING: Q-table shape {q_table.shape} does not match "
+                                 f"expected ({expected_states}, {expected_actions})")
+
             print(f"[FLIGHT3D] Loaded Q-table from {q_table_file}")
             return q_table
         except FileNotFoundError:

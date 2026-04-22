@@ -27,7 +27,7 @@ logging.basicConfig(level=logging.ERROR)
 URI = "radio://0/80/2M/E7E7E7E7E7"
 QTM_IP = "128.174.245.64"
 MARKER_DECK_NAME = "Crazyflie"
-MARKER_DECK_IDS = [21, 22, 23, 24]
+MARKER_DECK_IDS = [1, 2, 3, 4]
 
 # 3D grid environment parameters
 GRID_X_MIN, GRID_X_MAX = 0.0, 2.0

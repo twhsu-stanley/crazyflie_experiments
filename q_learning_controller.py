@@ -11,12 +11,12 @@ from enum import IntEnum
 
 class Action3D(IntEnum):
     """Discrete actions in the 3D grid environment."""
-    UP_Y = 0        # +Y direction
-    DOWN_Y = 1      # -Y direction
-    RIGHT_X = 2     # +X direction
-    LEFT_X = 3      # -X direction
-    UP_Z = 4        # +Z direction
-    DOWN_Z = 5      # -Z direction
+    UP_Z = 0        # +Z direction
+    DOWN_Z = 1      # -Z direction
+    UP_Y = 2        # +Y direction
+    DOWN_Y = 3      # -Y direction
+    RIGHT_X = 4     # +X direction
+    LEFT_X = 5      # -X direction
 
 
 class GridEnvironment3D:

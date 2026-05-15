@@ -33,11 +33,11 @@ MARKER_DECK_IDS = [1, 2, 3, 4]
 # 3D grid environment parameters
 GRID_X_MIN, GRID_X_MAX = 0.0, 2.0
 GRID_Y_MIN, GRID_Y_MAX = 0.0, 2.0
-GRID_Z_MIN, GRID_Z_MAX = 0.0, 2.0
+GRID_Z_MIN, GRID_Z_MAX = 0.2, 2.2
 GRID_SIZE = 0.4
 
 # Flight parameters
-HOVER_Z = 0.8
+HOVER_Z = 0.4
 TAKEOFF_TIME = 3.0
 LAND_TIME = 2.0
 FINAL_Z = 0.10
@@ -190,10 +190,9 @@ def step_grid_from_action(grid_env, current_grid, action):
 
 def predict_navigation_path(grid_env, controller, start_grid, target_grid, max_steps=50):
     """Predict the greedy 3D navigation path without moving the drone."""
-    # Always start from (0, 0, 0) for prediction
-    waypoints = [(0, 0, 0)]
+    waypoints = [start_grid]
     actions = []
-    current_grid = (0, 0, 0)
+    current_grid = start_grid
 
     for _ in range(max_steps):
         current_state = grid_env.grid_to_state(*current_grid)
@@ -352,6 +351,7 @@ def main():
     print(q_table.shape)
 
     initial_position = get_current_position(qtm_client)
+    initial_position = (initial_position[0], initial_position[1], HOVER_Z)
     start_grid = grid_env.continuous_to_grid(*initial_position)
     target_grid = (grid_env.nx - 1, grid_env.ny - 1, grid_env.nz - 1)
     waypoints, actions = predict_navigation_path(grid_env, controller, start_grid, target_grid, MAX_NAVIGATION_STEPS)

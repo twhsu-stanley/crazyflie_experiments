@@ -66,8 +66,8 @@ def main():
         description="Visualize 3D Q-learning flight trajectory",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-Examples:
-  python visualize_3d_flight.py data/trajectory_3d_20260420_180100.csv
+                Examples:
+                python visualize_3d.py data/trajectory_3d_20260420_180100.csv
         """,
     )
 

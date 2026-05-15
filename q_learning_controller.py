@@ -11,12 +11,19 @@ from enum import IntEnum
 
 class Action3D(IntEnum):
     """Discrete actions in the 3D grid environment."""
-    UP_Z = 0        # +Z direction
-    DOWN_Z = 1      # -Z direction
+    #UP_Z = 0        # +Z direction
+    #DOWN_Z = 1      # -Z direction
+    #UP_Y = 2        # +Y direction
+    #DOWN_Y = 3      # -Y direction
+    #RIGHT_X = 4     # +X direction
+    #LEFT_X = 5      # -X direction
+
+    RIGHT_X = 0     # +X direction
+    LEFT_X = 1      # -X direction
     UP_Y = 2        # +Y direction
     DOWN_Y = 3      # -Y direction
-    RIGHT_X = 4     # +X direction
-    LEFT_X = 5      # -X direction
+    UP_Z = 4        # +Z direction
+    DOWN_Z = 5      # -Z direction
 
 
 class GridEnvironment3D:
@@ -71,16 +78,24 @@ class GridEnvironment3D:
 
     def grid_to_state(self, grid_x, grid_y, grid_z):
         """Convert 3D grid indices to a 1D state index."""
-        return grid_z * (self.nx * self.ny) + grid_y * self.nx + grid_x
+        #return grid_z * (self.nx * self.ny) + grid_y * self.nx + grid_x
+        return grid_x * (self.ny * self.nz) + grid_y * self.nz + grid_z
 
     def state_to_grid(self, state):
         """Convert a 1D state index to 3D grid indices."""
-        xy_plane_size = self.nx * self.ny
-        grid_z = state // xy_plane_size
-        plane_state = state % xy_plane_size
-        grid_x = plane_state % self.nx
-        grid_y = plane_state // self.nx
-        return grid_x, grid_y, grid_z
+        #xy_plane_size = self.nx * self.ny
+        #grid_z = state // xy_plane_size
+        #plane_state = state % xy_plane_size
+        #grid_x = plane_state % self.nx
+        #grid_y = plane_state // self.nx
+        #return grid_x, grid_y, grid_z
+
+        yz_plane_size = self.ny * self.nz
+        grid_x = state // yz_plane_size
+        remainder = state % yz_plane_size
+        grid_y = remainder // self.nz
+        grid_z = remainder % self.nz
+        return int(grid_x), int(grid_y), int(grid_z)
 
     def is_valid_grid(self, grid_x, grid_y, grid_z):
         """Check if 3D grid indices are within valid range."""

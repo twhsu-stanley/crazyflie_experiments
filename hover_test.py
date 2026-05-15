@@ -20,7 +20,7 @@ logging.basicConfig(level=logging.ERROR)
 # =====================================
 # USER SETTINGS
 # =====================================
-URI = "radio://0/80/2M/E7E7E7E7E7"
+URI = "radio://0/80/2M/E7E7E7E7E8"
 QTM_IP = "128.174.245.64"
 # MARKER_DECK_NAME = "marker_deck_20"
 MARKER_DECK_NAME = "Crazyflie"
